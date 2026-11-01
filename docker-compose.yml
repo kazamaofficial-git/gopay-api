@@ -1,0 +1,14 @@
+services:
+  gopay-api:
+    build: .
+    container_name: gopay-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+      SESSION_FILE: /app/data/session.json
+    volumes:
+      - ./data:/app/data

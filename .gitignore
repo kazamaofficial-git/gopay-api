@@ -1,0 +1,7 @@
+node_modules/
+.env
+.GOPAY_SESI_JANGAN_DIHAPUS.json
+.gopay_cache.json
+data/
+*.log
+.DS_Store

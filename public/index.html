@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffd93d">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/neo.css">
+  <title>GoPay API Gateway | Kazama Tech</title>
+  <meta name="description" content="API self-hosted untuk cetak QRIS dinamis, cek pembayaran GoPay masuk, dan tampilkan halaman bayar untuk pembeli.">
+  <style>
+    .hero { padding-block: var(--space-5) var(--space-4); }
+    .hero-grid { display: grid; gap: 3.5rem; grid-template-columns: 1.05fr .95fr; align-items: center; }
+    .hero-grid > * { min-width: 0; }
+    .hero h1 { margin: 1.25rem 0 1rem; }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.75rem; }
+
+    .stage { position: relative; padding: 0 0 14rem; }
+    .stage .code { width: 100%; }
+    .pay-mini { position: absolute; right: 0; bottom: 0; width: min(230px, 60%); transform: rotate(3deg); right: .5rem; padding: 1rem; background: var(--paper); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .pay-mini .qr { background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: .5rem; }
+    .pay-mini .qr svg { width: 100%; height: auto; }
+    .pay-mini .qr path { fill: var(--ink); }
+    .pay-mini .amt { font: 800 1.45rem var(--font-display); margin: .75rem 0 .15rem; letter-spacing: -.02em; }
+    .pay-mini small { font-weight: 700; color: var(--muted); }
+    .sticker { position: absolute; top: -.9rem; right: -.6rem; transform: rotate(9deg); background: var(--lime); border: var(--border); border-radius: 999px; padding: .25rem .9rem; font: 800 .9rem var(--font-display); box-shadow: var(--shadow-xs); }
+
+    .strip { background: var(--ink); color: #fff; border-block: var(--border); }
+    .strip ul { list-style: none; margin: 0; padding: .95rem 0; display: flex; flex-wrap: wrap; gap: .6rem 2rem; justify-content: center; font: 800 .9rem var(--font-mono); }
+    .strip li { display: inline-flex; align-items: center; gap: .55rem; }
+    .strip li::before { content: ""; width: .6rem; height: .6rem; background: var(--c, var(--sun)); border: 2px solid #fff; border-radius: 2px; }
+
+    .bento { display: grid; gap: 1.5rem; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .bento .card { display: flex; flex-direction: column; gap: .75rem; }
+    .bento .card p { margin: 0; }
+    .span-3 { grid-column: span 3; } .span-2 { grid-column: span 2; }
+    .bento .snippet { margin-top: auto; background: rgba(255,255,255,.7); border: 2px solid var(--ink); border-radius: 10px; padding: .6rem .8rem; font: 700 .82rem var(--font-mono); overflow-x: auto; white-space: pre; }
+    .kicker { align-self: flex-start; }
+
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--paper); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .flow > div { padding: 1.6rem; border-right: var(--border); }
+    .flow > div:last-child { border-right: 0; }
+    .flow .n { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border: var(--border); border-radius: 50%; font: 800 1.1rem var(--font-display); margin-bottom: 1rem; background: var(--c, var(--sun)); }
+    .flow h3 { margin-bottom: .35em; }
+    .flow p { margin: 0; font-size: .95rem; color: var(--muted); }
+
+    .docs-teaser { display: grid; grid-template-columns: 1fr 1.1fr; gap: 2.5rem; align-items: center; }
+    .docs-teaser > * { min-width: 0; }
+    .ep-list { list-style: none; margin: 0; padding: 0; background: var(--paper); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .ep-list li { display: flex; align-items: center; gap: .85rem; padding: .8rem 1.1rem; border-bottom: 2px solid var(--ink); font: 700 .92rem var(--font-mono); }
+    .ep-list li:last-child { border-bottom: 0; }
+    .ep-list .method { min-width: 3.6rem; text-align: center; }
+    .ep-list span.d { margin-left: auto; font: 600 .82rem var(--font-body); color: var(--muted); text-align: right; }
+
+    .cta { background: var(--blue); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: clamp(1.75rem, 5vw, 3.25rem); display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .cta h2 { margin: 0; max-width: 20ch; }
+
+    @media (max-width: 960px) {
+      .hero-grid, .docs-teaser { grid-template-columns: 1fr; }
+      .stage { padding-bottom: 12rem; }
+      .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .span-3, .span-2 { grid-column: span 2; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow > div:nth-child(2) { border-right: 0; }
+      .flow > div:nth-child(-n+2) { border-bottom: var(--border); }
+    }
+    @media (max-width: 560px) {
+      .flow { grid-template-columns: 1fr; }
+      .flow > div { border-right: 0; border-bottom: var(--border); }
+      .flow > div:last-child { border-bottom: 0; }
+      .ep-list span.d { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-wrap">
+    <div class="wrap">
+      <nav class="navbar" aria-label="Navigasi utama">
+        <a class="brand" href="/"><img src="/assets/favicon.svg" alt="" width="34" height="34">GoPay API</a>
+        <div class="nav-links">
+          <a href="/docs">Dokumentasi</a>
+          <a href="/docs#endpoint">Endpoint</a>
+          <a href="/docs#pasang">Pasang</a>
+          <a class="btn btn-dark btn-sm" href="https://github.com/kazamaofficial-git/gopay-api" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="pill" id="server-status"><span class="dot" aria-hidden="true"></span><span class="label">Memeriksa server</span></p>
+          <h1>Terima bayar GoPay lewat satu API.</h1>
+          <p class="lead">Cetak QRIS dinamis dengan nominal tepat, cek pembayaran yang masuk, dan beri pembeli halaman bayar siap pakai. Berjalan di server kamu sendiri, tanpa pihak ketiga.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/docs">Baca dokumentasi</a>
+            <a class="btn" href="https://github.com/kazamaofficial-git/gopay-api" target="_blank" rel="noopener">Lihat di GitHub</a>
+          </div>
+        </div>
+
+        <div class="stage" role="figure" aria-label="Contoh request API dan halaman bayar">
+          <div class="code">
+            <div class="code-bar"><span class="lights" aria-hidden="true"><i></i><i></i><i></i></span><span>GET /create-qris</span><span>200 OK</span></div>
+<pre><span class="t-c"># minta QRIS Rp 25.000</span>
+curl <span class="t-s">"https://api.tokomu.id/create-qris?amount=25000"</span> \
+  -H <span class="t-s">"X-Api-Key: $API_KEY"</span>
+
+{
+  <span class="t-k">"success"</span>: <span class="t-n">true</span>,
+  <span class="t-k">"data"</span>: {
+    <span class="t-k">"trx_id"</span>: <span class="t-s">"TRX-A3F8K2M9"</span>,
+    <span class="t-k">"qris_url"</span>: <span class="t-s">"https://api.tokomu.id/qr/k3x9..."</span>,
+    <span class="t-k">"amount"</span>: <span class="t-n">25000</span>
+  }
+}</pre>
+          </div>
+          <div class="pay-mini">
+            <span class="sticker">Lunas</span>
+            <div class="qr"><svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM8 0h1v1h-1zM9 0h1v1h-1zM10 0h1v1h-1zM11 0h1v1h-1zM12 0h1v1h-1zM14 0h1v1h-1zM15 0h1v1h-1zM18 0h1v1h-1zM19 0h1v1h-1zM20 0h1v1h-1zM21 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM10 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM15 1h1v1h-1zM16 1h1v1h-1zM18 1h1v1h-1zM24 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM11 2h1v1h-1zM15 2h1v1h-1zM18 2h1v1h-1zM20 2h1v1h-1zM21 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM14 3h1v1h-1zM18 3h1v1h-1zM20 3h1v1h-1zM21 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM15 4h1v1h-1zM18 4h1v1h-1zM20 4h1v1h-1zM21 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM24 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM18 6h1v1h-1zM19 6h1v1h-1zM20 6h1v1h-1zM21 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM10 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM0 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM8 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM15 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM20 8h1v1h-1zM24 8h1v1h-1zM1 9h1v1h-1zM2 9h1v1h-1zM7 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM16 9h1v1h-1zM17 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM23 9h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM12 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM19 10h1v1h-1zM0 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM12 11h1v1h-1zM16 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM20 11h1v1h-1zM21 11h1v1h-1zM0 12h1v1h-1zM3 12h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM15 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM19 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM23 12h1v1h-1zM1 13h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM19 13h1v1h-1zM20 13h1v1h-1zM22 13h1v1h-1zM23 13h1v1h-1zM2 14h1v1h-1zM4 14h1v1h-1zM6 14h1v1h-1zM7 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM15 14h1v1h-1zM16 14h1v1h-1zM17 14h1v1h-1zM18 14h1v1h-1zM19 14h1v1h-1zM21 14h1v1h-1zM23 14h1v1h-1zM24 14h1v1h-1zM0 15h1v1h-1zM1 15h1v1h-1zM2 15h1v1h-1zM5 15h1v1h-1zM6 15h1v1h-1zM8 15h1v1h-1zM10 15h1v1h-1zM13 15h1v1h-1zM17 15h1v1h-1zM21 15h1v1h-1zM22 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM0 16h1v1h-1zM2 16h1v1h-1zM3 16h1v1h-1zM4 16h1v1h-1zM8 16h1v1h-1zM9 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM13 16h1v1h-1zM14 16h1v1h-1zM18 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM24 16h1v1h-1zM8 17h1v1h-1zM9 17h1v1h-1zM10 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM23 17h1v1h-1zM0 18h1v1h-1zM1 18h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM17 18h1v1h-1zM18 18h1v1h-1zM0 19h1v1h-1zM6 19h1v1h-1zM8 19h1v1h-1zM9 19h1v1h-1zM10 19h1v1h-1zM12 19h1v1h-1zM16 19h1v1h-1zM17 19h1v1h-1zM22 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM0 20h1v1h-1zM2 20h1v1h-1zM3 20h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM11 20h1v1h-1zM12 20h1v1h-1zM13 20h1v1h-1zM15 20h1v1h-1zM18 20h1v1h-1zM19 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM0 21h1v1h-1zM2 21h1v1h-1zM3 21h1v1h-1zM4 21h1v1h-1zM6 21h1v1h-1zM11 21h1v1h-1zM14 21h1v1h-1zM15 21h1v1h-1zM17 21h1v1h-1zM18 21h1v1h-1zM19 21h1v1h-1zM20 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM0 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM6 22h1v1h-1zM10 22h1v1h-1zM11 22h1v1h-1zM12 22h1v1h-1zM13 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM19 22h1v1h-1zM21 22h1v1h-1zM22 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h1v1h-1zM11 23h1v1h-1zM12 23h1v1h-1zM14 23h1v1h-1zM15 23h1v1h-1zM16 23h1v1h-1zM17 23h1v1h-1zM20 23h1v1h-1zM22 23h1v1h-1zM24 23h1v1h-1zM0 24h1v1h-1zM1 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM5 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM9 24h1v1h-1zM10 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM13 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM19 24h1v1h-1zM20 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1z"/></svg></div>
+            <p class="amt">Rp 25.000</p>
+            <small>Scan dengan GoPay atau e-wallet apa pun</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="strip">
+      <div class="wrap">
+        <ul aria-label="Fitur utama">
+          <li style="--c:var(--sun)">QRIS EMVCo</li>
+          <li style="--c:var(--pink)">CRC16 valid</li>
+          <li style="--c:var(--lime)">Anti klaim ganda</li>
+          <li style="--c:var(--violet)">Self-hosted</li>
+          <li style="--c:var(--blue)">REST JSON</li>
+          <li style="--c:var(--sun)">Docker ready</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Semua yang dibutuhkan toko kamu</h2>
+          <p>Dari membuat kode QRIS sampai memastikan uangnya masuk, tanpa perlu membuka aplikasi merchant.</p>
+        </div>
+        <div class="bento">
+          <article class="card bg-sun span-3">
+            <span class="tag kicker">QRIS</span>
+            <h3>Cetak QRIS dinamis</h3>
+            <p>Ubah QRIS statis GoBiz jadi QRIS dengan nominal sendiri. Dibuat lokal di server, lengkap dengan checksum CRC16 sesuai standar EMVCo.</p>
+            <div class="snippet">5405<b>25000</b>5802ID...6304<b>A1F9</b></div>
+          </article>
+          <article class="card bg-pink span-3">
+            <span class="tag kicker">Verifikasi</span>
+            <h3>Cek pembayaran masuk</h3>
+            <p>Cocokkan nominal dan waktu transaksi. Satu transaksi hanya bisa diklaim satu <code>trx_id</code>, jadi dua pembeli tidak saling mengambil pembayaran.</p>
+            <div class="snippet">{ "paid": true, "amount": 25000 }</div>
+          </article>
+          <article class="card bg-lime span-2">
+            <span class="tag kicker">Pembeli</span>
+            <h3>Halaman bayar</h3>
+            <p>Kirim link <code>/qr/:id</code>. Ada hitung mundur 5 menit dan cek otomatis.</p>
+          </article>
+          <article class="card bg-violet span-2">
+            <span class="tag kicker">Laporan</span>
+            <h3>Riwayat mutasi</h3>
+            <p>Ambil transaksi QRIS, GoPay, dan kartu dalam rentang waktu pilihanmu.</p>
+          </article>
+          <article class="card bg-blue span-2">
+            <span class="tag kicker">Keamanan</span>
+            <h3>Aman sejak awal</h3>
+            <p>API key dibandingkan timing-safe, endpoint publik dibatasi, QR dibuat lokal.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head"><h2>Alur integrasi</h2><p>Empat langkah dari pesanan sampai lunas.</p></div>
+        <div class="flow">
+          <div style="--c:var(--sun)"><span class="n">1</span><h3>Buat QRIS</h3><p>Backend memanggil <code>/create-qris</code> dan menyimpan <code>trx_id</code>.</p></div>
+          <div style="--c:var(--pink)"><span class="n">2</span><h3>Kirim link bayar</h3><p>Pembeli membuka <code>qris_url</code> lalu scan dari aplikasi apa pun.</p></div>
+          <div style="--c:var(--lime)"><span class="n">3</span><h3>Cek status</h3><p>Backend memanggil <code>/check-payment</code> dengan nominal dan <code>trx_id</code>.</p></div>
+          <div style="--c:var(--violet)"><span class="n">4</span><h3>Tandai lunas</h3><p>Saat <code>paid</code> bernilai <code>true</code>, pesanan kamu proses.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap docs-teaser">
+        <div>
+          <h2>Dokumentasi lengkap, langsung di web</h2>
+          <p class="lead">Semua parameter, contoh respon, contoh kode untuk Node.js, PHP, dan Python, sampai panduan deploy ada di satu halaman.</p>
+          <a class="btn btn-primary" href="/docs">Buka dokumentasi</a>
+        </div>
+        <ul class="ep-list" aria-label="Daftar endpoint">
+          <li><span class="method any">GET</span>/create-qris<span class="d">Buat QRIS dinamis</span></li>
+          <li><span class="method any">GET</span>/check-payment<span class="d">Cek pembayaran masuk</span></li>
+          <li><span class="method">GET</span>/qr/:id<span class="d">Halaman bayar</span></li>
+          <li><span class="method">GET</span>/transactions<span class="d">Riwayat mutasi</span></li>
+          <li><span class="method">GET</span>/token-status<span class="d">Status sesi GoPay</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Siap menyambungkan ke toko kamu?</h2>
+          <a class="btn btn-primary" href="/docs#mulai-cepat">Mulai dari dokumentasi</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="/" style="color:#fff"><img src="/assets/favicon.svg" alt="" width="34" height="34">GoPay API</a>
+          <p style="margin-top:1rem">Gateway pembayaran GoPay self-hosted. Dibuat oleh Kazama Tech: full stack engineering untuk payment gateway, otomasi, dan infrastruktur cloud.</p>
+        </div>
+        <div>
+          <h4>Proyek</h4>
+          <ul>
+            <li><a href="/docs">Dokumentasi</a></li>
+            <li><a href="https://github.com/kazamaofficial-git/gopay-api" target="_blank" rel="noopener">Source code</a></li>
+            <li><a href="https://github.com/kazamaofficial-git/gopay-api/blob/main/LICENSE" target="_blank" rel="noopener">Lisensi MIT</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Kazama Tech</h4>
+          <ul>
+            <li><a href="https://www.kazamasite.biz.id" target="_blank" rel="noopener">Website</a></li>
+            <li><a href="https://www.instagram.com/kazamaofficial.ig" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://t.me/DhilzzKZ" target="_blank" rel="noopener">Telegram</a></li>
+            <li><a href="https://t.me/kazamachannel" target="_blank" rel="noopener">Channel update</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom"><p>Proyek tidak resmi dan tidak berafiliasi dengan PT GoTo Gojek Tokopedia Tbk atau GoPay. Gunakan dengan bijak.</p></div>
+    </div>
+  </footer>
+  <script src="/assets/site.js"></script>
+</body>
+</html>

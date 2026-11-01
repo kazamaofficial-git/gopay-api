@@ -1,0 +1,35 @@
+{
+  "name": "gopay-api",
+  "version": "2.0.0",
+  "description": "GoPay Merchant API Gateway: QRIS dinamis, verifikasi pembayaran, halaman bayar, dan dokumentasi publik",
+  "main": "server.js",
+  "license": "MIT",
+  "author": "Kazama Tech",
+  "homepage": "https://github.com/kazamaofficial-git/gopay-api#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kazamaofficial-git/gopay-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kazamaofficial-git/gopay-api/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "login": "node login.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
